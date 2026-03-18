@@ -32,4 +32,18 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  
+  /* Show notes as inline text when printing */
+  body.wa-printing-full [data-note]::after {
+    content: ' [Note: ' attr(data-note) ']';
+    font-size: 0.85em;
+    font-style: italic;
+    color: #4b5563;
+    background: transparent !important;
+  }
+  
+  /* Hide the regular note icon to prevent duplication */
+  body.wa-printing-full .note-icon {
+    display: none !important;
+  }
 }

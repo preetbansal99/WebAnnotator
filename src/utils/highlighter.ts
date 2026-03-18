@@ -21,6 +21,9 @@ export function applyHighlight(range: Range, highlight: Highlight): void {
     const span = document.createElement('span');
     span.className = `${HIGHLIGHT_CLASS_PREFIX}${highlight.color}`;
     span.setAttribute(HIGHLIGHT_DATA_ATTRIBUTE, highlight.id);
+    if (highlight.note) {
+      span.setAttribute('data-note', highlight.note);
+    }
     return span;
   };
 
@@ -164,6 +167,11 @@ export function updateHighlightNote(highlightId: string, note?: string): void {
 
   elements.forEach(element => {
     element.classList.remove('has-note');
+    if (note) {
+      element.setAttribute('data-note', note);
+    } else {
+      element.removeAttribute('data-note');
+    }
     const childIcons = element.querySelectorAll('.note-icon');
     childIcons.forEach(icon => icon.remove());
   });
