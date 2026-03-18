@@ -422,7 +422,31 @@ export const shadowStyles = `
     border-width: 3px;
   }
   
-  .hover\\:bg-gray-50:hover {
+  .hover\:bg-gray-50:hover {
     background-color: #f9fafb;
+  }
+
+  .p-3 {
+    padding: 0.75rem;
+  }
+
+  .gap-3 {
+    gap: 0.75rem;
+  }
+
+  .gap-1 {
+    gap: 0.25rem;
+  }
+
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .bottom-6 {
+    bottom: 1.5rem;
+  }
+
+  .right-6 {
+    right: 1.5rem;
   }
 `;

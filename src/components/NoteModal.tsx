@@ -37,7 +37,7 @@ export function NoteModal({ initialNote = '', onSave, onCancel }: NoteModalProps
   };
 
   return (
-    <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black bg-opacity-50 animate-fadeIn" style={{ height: '100vh', width: '100vw', margin: 0, padding: 0 }}>
+    <div className="fixed inset-0 z-[999999] flex items-center justify-center animate-fadeIn" style={{ height: '100vh', width: '100vw', margin: 0, padding: 0, backgroundColor: 'rgba(0,0,0,0.5)' }}>
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 animate-slideUp relative z-[1000000]">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">
           {initialNote ? 'Edit Note' : 'Add Note'}
