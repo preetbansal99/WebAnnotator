@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Highlight styles for annotated text */
+.highlight-yellow {
+  background-color: #fef08a;
+  cursor: pointer;
+}
+
+.highlight-green {
+  background-color: #86efac;
+  cursor: pointer;
+}
+
+.highlight-blue {
+  background-color: #93c5fd;
+  cursor: pointer;
+}
+
+/* Note indicator */
+.has-note::after {
+  content: '📝';
+  font-size: 0.75em;
+  margin-left: 2px;
+  vertical-align: super;
+}
