@@ -51,6 +51,7 @@ export function App() {
   const [pendingHighlight, setPendingHighlight] = useState<Highlight | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
@@ -271,8 +272,7 @@ export function App() {
     setToolbarPosition(null);
   }, []);
 
-  // Export Highlights function
-  const handleExport = useCallback(() => {
+  const handleExportHTML = useCallback(() => {
     if (highlights.length === 0) {
       showToast('No highlights to export');
       return;
@@ -281,79 +281,128 @@ export function App() {
     const dt = new Date().toLocaleString();
     const pageTitle = document.title || 'Page';
 
-    const cards = highlights.map((h, i) => {
+    const cardRows = highlights.map((h, i) => {
       const bg = COLOR_MAP[h.color] || '#fef08a';
       const text = escapeHtml(h.range.text);
-      const noteHtml = h.note
-        ? '<div class="note">&#x1F4AC; <em>' + escapeHtml(h.note) + '</em></div>'
+      const colorLabel = h.color.replace('light-', '').toUpperCase();
+      const created = new Date(h.createdAt).toLocaleString();
+      const noteRow = h.note
+        ? '<div class="note"><span class="note-icon">&#x1F4AC;</span> ' + escapeHtml(h.note) + '</div>'
         : '';
 
-      const created = new Date(h.createdAt).toLocaleString();
-      const colorLabel = h.color.replace('light-', '').toUpperCase();
-
-      return [
-        '<div class="card" style="border-left:5px solid ' + bg + ';">',
-        '  <div class="chip" style="background:' + bg + ';">' + colorLabel + '</div>',
-        '  <blockquote>&#8220;' + text + '&#8221;</blockquote>',
-        noteHtml,
-        '  <div class="meta">#' + (i + 1) + ' &middot; ' + created + '</div>',
+      return (
+        '<div class="card" style="border-left: 5px solid ' + bg + ';">' +
+          '<div class="chip" style="background:' + bg + ';">' + colorLabel + '</div>' +
+          '<blockquote>&#8220;' + text + '&#8221;</blockquote>' +
+          noteRow +
+          '<div class="meta">#' + (i + 1) + ' &nbsp;&middot;&nbsp; ' + created + '</div>' +
         '</div>'
-      ].join('\n');
-    }).join('\n');
+      );
+    });
 
-    const html = [
+    const htmlParts = [
       '<!DOCTYPE html>',
       '<html lang="en">',
       '<head>',
-      '<meta charset="UTF-8" />',
-      '<title>Highlights &mdash; ' + escapeHtml(pageTitle) + '</title>',
+      '<meta charset="UTF-8">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+      '<title>Highlights - ' + escapeHtml(pageTitle) + '</title>',
       '<style>',
-      '*{box-sizing:border-box;margin:0;padding:0}',
-      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f8f9fa;color:#1f2937;padding:2rem}',
-      'header{max-width:720px;margin:0 auto 2rem;padding-bottom:1rem;border-bottom:2px solid #e5e7eb}',
-      'header h1{font-size:1.5rem;font-weight:700;margin-bottom:.25rem}',
-      'header p{font-size:.875rem;color:#6b7280}',
-      'header a{color:#2563eb;word-break:break-all}',
-      '.cards{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:1rem}',
-      '.card{background:#fff;border-radius:.75rem;padding:1.25rem 1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.08)}',
-      '.chip{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.05em;padding:.15rem .5rem;border-radius:999px;margin-bottom:.6rem}',
-      'blockquote{font-size:1rem;line-height:1.7;color:#111827;font-style:italic;margin-bottom:.5rem}',
-      '.note{font-size:.875rem;color:#374151;background:#f3f4f6;border-radius:.5rem;padding:.5rem .75rem;margin-top:.5rem}',
-      '.meta{font-size:.75rem;color:#9ca3af;margin-top:.75rem}',
+      '* { box-sizing: border-box; margin: 0; padding: 0; }',
+      'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8f9fa; color: #1f2937; padding: 2rem; }',
+      'header { max-width: 720px; margin: 0 auto 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb; }',
+      'header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: .4rem; }',
+      'header p { font-size: .875rem; color: #6b7280; margin-top: .3rem; }',
+      'header a { color: #2563eb; text-decoration: none; word-break: break-all; }',
+      'header a:hover { text-decoration: underline; }',
+      '.cards { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }',
+      '.card { background: #fff; border-radius: .75rem; padding: 1.25rem 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.08); }',
+      '.chip { display: inline-block; font-size: .65rem; font-weight: 700; letter-spacing: .05em; padding: .15rem .6rem; border-radius: 999px; margin-bottom: .75rem; }',
+      'blockquote { font-size: 1rem; line-height: 1.7; color: #111827; font-style: italic; border: none; }',
+      '.note { font-size: .875rem; color: #374151; background: #f3f4f6; border-radius: .5rem; padding: .6rem .75rem; margin-top: .75rem; }',
+      '.note-icon { margin-right: .35rem; }',
+      '.meta { font-size: .75rem; color: #9ca3af; margin-top: .75rem; }',
       '</style>',
       '</head>',
       '<body>',
-      '  <header>',
-      '    <h1>&#x1F4CC; Highlights &mdash; ' + escapeHtml(pageTitle) + '</h1>',
-      '    <p>Exported: ' + dt + ' | ' + highlights.length + ' highlight' + (highlights.length !== 1 ? 's' : '') + '</p>',
-      '    <p style="margin-top:.4rem">Source: <a href="' + url + '">' + escapeHtml(url) + '</a></p>',
-      '  </header>',
-      '  <div class="cards">',
-      cards,
-      '  </div>',
+      '<header>',
+      '<h1>&#x1F4CC; ' + escapeHtml(pageTitle) + '</h1>',
+      '<p>Exported: ' + dt + ' &nbsp;&middot;&nbsp; ' + highlights.length + ' highlight' + (highlights.length !== 1 ? 's' : '') + '</p>',
+      '<p>Source: <a href="' + url + '">' + escapeHtml(url) + '</a></p>',
+      '</header>',
+      '<div class="cards">',
+      cardRows.join('\n'),
+      '</div>',
       '</body>',
-      '</html>'
-    ].join('\n');
+      '</html>',
+    ];
 
-    // FIX 1: sanitize filename — strip illegal OS characters
+    const html = htmlParts.join('\n');
     const safeTitle = pageTitle.replace(/[\\/:*?"<>|]/g, '_').substring(0, 60);
-
-    // FIX 2: export as .html so it opens in any browser with correct encoding
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const downloadUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = downloadUrl;
-    a.download = `highlights-${safeTitle}.html`;
+    a.download = 'highlights-' + safeTitle + '.html';
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-
-    // FIX 3: delay revoke so browser finishes the download
     setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
-
-    showToast(`Exported ${highlights.length} highlights as HTML`);
+    setShowExportMenu(false);
+    showToast('Exported ' + highlights.length + ' highlights as HTML');
   }, [highlights, url, showToast]);
+
+  const handleExportText = useCallback(() => {
+    if (highlights.length === 0) {
+      showToast('No highlights to export');
+      return;
+    }
+
+    const pageTitle = document.title || 'Page';
+    const dt = new Date().toLocaleString();
+
+    const lines: string[] = [
+      'HIGHLIGHTS — ' + pageTitle,
+      '='.repeat(60),
+      'Exported: ' + dt,
+      'Source:   ' + url,
+      '='.repeat(60),
+      '',
+    ];
+
+    highlights.forEach((h, i) => {
+      lines.push('#' + (i + 1) + ' [' + h.color.replace('light-', '').toUpperCase() + ']');
+      lines.push('"' + h.range.text + '"');
+      if (h.note) {
+        lines.push('  Note: ' + h.note);
+      }
+      lines.push('  Saved: ' + new Date(h.createdAt).toLocaleString());
+      lines.push('');
+    });
+
+    const text = lines.join('\n');
+    const safeTitle = pageTitle.replace(/[\\/:*?"<>|]/g, '_').substring(0, 60);
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const downloadUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = 'highlights-' + safeTitle + '.txt';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    setShowExportMenu(false);
+    showToast('Exported ' + highlights.length + ' highlights as TXT');
+  }, [highlights, url, showToast]);
+
+  useEffect(() => {
+    if (!showExportMenu) return;
+    const close = () => setShowExportMenu(false);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [showExportMenu]);
 
   const handleClearAll = useCallback(async () => {
     if (!isConfirmingClear) {
@@ -407,18 +456,73 @@ export function App() {
           >
             {isConfirmingClear ? 'Are you sure?' : 'Clear All'}
           </button>
-          <button
-            onClick={handleExport}
-            title="Export current page's highlights to a text file"
-            className="px-5 py-3 bg-white text-gray-800 border border-gray-200 rounded-full shadow-lg hover:bg-gray-50 transition-colors duration-150 text-sm font-semibold flex items-center gap-2 shadow-md"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Export ({highlights.length})
-          </button>
+          {/* Export dropdown */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowExportMenu(prev => !prev);
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '8px 16px', borderRadius: '9999px',
+                background: '#2563eb', color: '#fff',
+                border: 'none', cursor: 'pointer',
+                fontSize: '13px', fontWeight: 600,
+                boxShadow: '0 2px 8px rgba(37,99,235,0.35)',
+              }}
+            >
+              &#x2193; Export ({highlights.length})
+            </button>
+
+            {showExportMenu && (
+              <div style={{
+                position: 'absolute', bottom: '110%', right: 0,
+                background: '#fff', borderRadius: '12px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                overflow: 'hidden', minWidth: '200px',
+                border: '1px solid #e5e7eb',
+                marginBottom: '8px',
+              }}>
+                {/* Option 1 — Styled HTML report */}
+                <button
+                  onClick={handleExportHTML}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '12px 16px', background: 'none',
+                    border: 'none', cursor: 'pointer',
+                    fontSize: '13px', color: '#111827',
+                    borderBottom: '1px solid #f3f4f6',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                >
+                  <div style={{ fontWeight: 600 }}>&#x1F5C3; Styled HTML Report</div>
+                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+                    Opens in browser · includes colors &amp; notes
+                  </div>
+                </button>
+
+                {/* Option 2 — Plain text */}
+                <button
+                  onClick={handleExportText}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '12px 16px', background: 'none',
+                    border: 'none', cursor: 'pointer',
+                    fontSize: '13px', color: '#111827',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                >
+                  <div style={{ fontWeight: 600 }}>&#x1F4DD; Plain Text (.txt)</div>
+                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+                    Simple list · highlighted text &amp; notes only
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>
