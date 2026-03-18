@@ -34,6 +34,7 @@ export function App() {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [pendingHighlight, setPendingHighlight] = useState<Highlight | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isConfirmingClear, setIsConfirmingClear] = useState(false);
 
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
@@ -346,16 +347,21 @@ export function App() {
   }, [highlights, url, showToast]);
 
   const handleClearAll = useCallback(async () => {
-    if (confirm('Delete all highlights on this page?')) {
-      try {
-        await clearAllStorageHighlights();
-        clearDomHighlights();
-        showToast('All highlights cleared.');
-      } catch (error) {
-        showToast('Failed to clear highlights.');
-      }
+    if (!isConfirmingClear) {
+      setIsConfirmingClear(true);
+      setTimeout(() => setIsConfirmingClear(false), 3000); // Reset after 3 seconds
+      return;
     }
-  }, [clearAllStorageHighlights, showToast]);
+
+    try {
+      await clearAllStorageHighlights();
+      clearDomHighlights();
+      showToast('All highlights cleared.');
+      setIsConfirmingClear(false);
+    } catch (error) {
+      showToast('Failed to clear highlights.');
+    }
+  }, [clearAllStorageHighlights, showToast, isConfirmingClear]);
 
   return (
     <>
@@ -387,10 +393,10 @@ export function App() {
         <div className="fixed bottom-6 right-6 z-[999999] flex flex-col gap-3 pointer-events-auto">
           <button
             onClick={handleClearAll}
-            title="Clear all highlights"
-            className="px-5 py-3 bg-white text-red-600 border border-gray-200 rounded-full shadow-lg hover:bg-gray-50 transition-colors duration-150 text-sm font-semibold flex items-center justify-center shadow-md"
+            title={isConfirmingClear ? "Click again to confirm" : "Clear all highlights"}
+            className={`px-5 py-3 ${isConfirmingClear ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-white text-red-600 hover:bg-red-50'} border border-gray-200 rounded-full shadow-lg transition-colors duration-200 text-sm font-semibold flex items-center justify-center`}
           >
-            Clear All
+            {isConfirmingClear ? 'Are you sure?' : 'Clear All'}
           </button>
           <button
             onClick={handleExport}

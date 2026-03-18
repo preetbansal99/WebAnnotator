@@ -426,6 +426,22 @@ export const shadowStyles = `
     background-color: #f9fafb;
   }
 
+  .bg-red-600 {
+    background-color: #dc2626;
+  }
+
+  .hover\:bg-red-700:hover {
+    background-color: #b91c1c;
+  }
+
+  .text-white {
+    color: #ffffff;
+  }
+
+  .hover\:bg-red-50:hover {
+    background-color: #fef2f2;
+  }
+
   .p-3 {
     padding: 0.75rem;
   }
