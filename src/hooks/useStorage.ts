@@ -116,7 +116,21 @@ export function useStorage(url: string) {
       console.error('Error deleting highlight:', error);
       throw error;
     }
-  }, [url]);
+  }, [normalizedUrl]);
+
+  // Clear all highlights
+  const clearAllHighlights = useCallback(async () => {
+    try {
+      const result = await chrome.storage.local.get(['highlights']);
+      const allHighlights = result.highlights || {};
+      allHighlights[normalizedUrl] = [];
+      await chrome.storage.local.set({ highlights: allHighlights });
+      setHighlights([]);
+    } catch (error) {
+      console.error('Error clearing highlights:', error);
+      throw error;
+    }
+  }, [normalizedUrl]);
 
   return {
     highlights,
@@ -124,6 +138,7 @@ export function useStorage(url: string) {
     saveHighlight,
     updateHighlight,
     deleteHighlight,
+    clearAllHighlights,
     reload: loadHighlights,
   };
 }

@@ -17,6 +17,8 @@ import {
   applyHighlight,
   generateId,
   restoreHighlights,
+  removeHighlight,
+  clearAllHighlights as clearDomHighlights,
 } from '../utils/highlighter';
 
 /**
@@ -25,7 +27,7 @@ import {
  */
 export function App() {
   const url = window.location.href;
-  const { highlights, saveHighlight, deleteHighlight, isLoading } = useStorage(url);
+  const { highlights, saveHighlight, deleteHighlight, clearAllHighlights: clearAllStorageHighlights, isLoading } = useStorage(url);
 
   const [toolbarPosition, setToolbarPosition] = useState<ToolbarPosition | null>(null);
   const [selectedRange, setSelectedRange] = useState<Range | null>(null);
@@ -60,6 +62,7 @@ export function App() {
         const highlightId = target.getAttribute('data-highlight-id');
         if (highlightId && confirm('Delete this highlight?')) {
           deleteHighlight(highlightId);
+          removeHighlight(highlightId);
           showToast('Highlight deleted.');
         }
         return;
@@ -344,12 +347,15 @@ export function App() {
 
   const handleClearAll = useCallback(async () => {
     if (confirm('Delete all highlights on this page?')) {
-      for (const h of highlights) {
-        await deleteHighlight(h.id);
+      try {
+        await clearAllStorageHighlights();
+        clearDomHighlights();
+        showToast('All highlights cleared.');
+      } catch (error) {
+        showToast('Failed to clear highlights.');
       }
-      showToast('All highlights cleared.');
     }
-  }, [highlights, deleteHighlight, showToast]);
+  }, [clearAllStorageHighlights, showToast]);
 
   return (
     <>
