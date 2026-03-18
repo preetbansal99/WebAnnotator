@@ -252,36 +252,94 @@ export function App() {
   }, []);
 
   // Export Highlights function
+  const colorMap: Record<string, string> = {
+    'light-yellow': '#fef08a',
+    'light-green': '#86efac',
+    'light-blue': '#93c5fd',
+    'light-pink': '#f9a8d4',
+    'light-purple': '#d8b4fe',
+  };
+
   const handleExport = useCallback(() => {
     if (highlights.length === 0) {
-      showToast("No highlights to export");
+      showToast('No highlights to export');
       return;
     }
 
     const dt = new Date().toLocaleString();
-    let content = `Highlights for ${url}\nExported: ${dt}\n\n`;
+    const pageTitle = document.title || 'Page';
 
-    highlights.forEach((h, i) => {
-      content += `--- [Highlight ${i + 1}] (${h.color}) ---\n`;
-      content += `"${h.range.text}"\n`;
-      if (h.note) {
-        content += `\nComment: ${h.note}\n`;
-      }
-      content += `\n`;
-    });
+    const escapeHtml = (str: string) =>
+      str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const cards = highlights.map((h, i) => {
+      const bg = colorMap[h.color] || '#fef08a';
+      const text = escapeHtml(h.range.text);
+      const note = h.note
+        ? `<div class="note">💬 <em>${escapeHtml(h.note)}</em></div>`
+        : '';
+      const created = new Date(h.createdAt).toLocaleString();
+      return `
+        <div class="card" style="border-left:5px solid ${bg};">
+          <div class="chip" style="background:${bg};">${h.color.replace('light-', '').toUpperCase()}</div>
+          <blockquote>"${text}"</blockquote>
+          ${note}
+          <div class="meta">#${i + 1} · ${created}</div>
+        </div>`;
+    }).join('\n');
+
+    const html = `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Highlights — ${escapeHtml(pageTitle)}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8f9fa;color:#1f2937;padding:2rem}
+      header{max-width:720px;margin:0 auto 2rem;padding-bottom:1rem;border-bottom:2px solid #e5e7eb}
+      header h1{font-size:1.5rem;font-weight:700;margin-bottom:.25rem}
+      header p{font-size:.875rem;color:#6b7280}
+      header a{color:#2563eb;word-break:break-all}
+      .cards{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:1rem}
+      .card{background:#fff;border-radius:.75rem;padding:1.25rem 1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+      .chip{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.05em;padding:.15rem .5rem;border-radius:999px;margin-bottom:.6rem}
+      blockquote{font-size:1rem;line-height:1.7;color:#111827;font-style:italic;margin-bottom:.5rem}
+      .note{font-size:.875rem;color:#374151;background:#f3f4f6;border-radius:.5rem;padding:.5rem .75rem;margin-top:.5rem}
+      .meta{font-size:.75rem;color:#9ca3af;margin-top:.75rem}
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>📌 Highlights — ${escapeHtml(pageTitle)}</h1>
+      <p>Exported: ${dt} | ${highlights.length} highlight${highlights.length !== 1 ? 's' : ''}</p>
+      <p style="margin-top:.4rem">Source: <a href="${url}">${url}</a></p>
+    </header>
+    <div class="cards">${cards}</div>
+  </body>
+  </html>`;
+
+    // FIX 1: sanitize filename — strip illegal OS characters
+    const safeTitle = pageTitle.replace(/[\\/:*?"<>|]/g, '_').substring(0, 60);
+
+    // FIX 2: export as .html so it opens in any browser with correct encoding
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const downloadUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = downloadUrl;
-    a.download = `webannotator-export-${document.title || 'page'}.txt`;
+    a.download = `highlights-${safeTitle}.html`;
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(downloadUrl);
 
-    showToast(`Exported ${highlights.length} highlights.`);
+    // FIX 3: delay revoke so browser finishes the download
+    setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+
+    showToast(`Exported ${highlights.length} highlights as HTML`);
   }, [highlights, url, showToast]);
 
   const handleClearAll = useCallback(async () => {
