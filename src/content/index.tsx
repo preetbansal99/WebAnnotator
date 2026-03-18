@@ -15,6 +15,7 @@ if (!document.getElementById('web-annotator-root')) {
   const container = document.createElement('div');
   container.id = 'web-annotator-root';
   container.setAttribute('data-web-annotator', 'true');
+  container.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:999998;';
 
   // Attach Shadow DOM for style isolation
   const shadowRoot = container.attachShadow({ mode: 'open' });

@@ -41,7 +41,7 @@ export function HighlightOverlay({
 
   return (
     <div
-      className="fixed z-[9999] animate-fadeIn outline-none"
+      className="fixed z-[9999] animate-fadeIn outline-none pointer-events-auto"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,

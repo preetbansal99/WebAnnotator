@@ -449,4 +449,24 @@ export const shadowStyles = `
   .right-6 {
     right: 1.5rem;
   }
+
+  .pointer-events-auto {
+    pointer-events: auto;
+  }
+
+  .border-transparent {
+    border-color: transparent;
+  }
+
+  .text-gray-900 {
+    color: #111827;
+  }
+
+  .disabled\:opacity-50:disabled {
+    opacity: 0.5;
+  }
+
+  .disabled\:cursor-not-allowed:disabled {
+    cursor: not-allowed;
+  }
 `;

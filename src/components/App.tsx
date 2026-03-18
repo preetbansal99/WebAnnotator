@@ -48,10 +48,23 @@ export function App() {
     }
   }, [highlights, isLoading]);
 
-  // Handle note icon clicks globally
+  // Handle note icon clicks globally and Alt+Click to delete highlights
   useEffect(() => {
     const handleDocumentClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+
+      // Delete highlight on Alt+Click
+      if (e.altKey && target && target.tagName === 'SPAN' && target.hasAttribute('data-highlight-id')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const highlightId = target.getAttribute('data-highlight-id');
+        if (highlightId && confirm('Delete this highlight?')) {
+          deleteHighlight(highlightId);
+          showToast('Highlight deleted.');
+        }
+        return;
+      }
+
       if (target && target.classList && target.classList.contains('note-icon')) {
         e.preventDefault();
         e.stopPropagation();
@@ -65,7 +78,7 @@ export function App() {
     // The highlights are in the main document, not our shadow DOM
     document.addEventListener('click', handleDocumentClick);
     return () => document.removeEventListener('click', handleDocumentClick);
-  }, []);
+  }, [deleteHighlight, showToast]);
 
   // Monitor DOM changes and re-apply highlights (with debouncing, missing only)
   useEffect(() => {
@@ -300,14 +313,14 @@ export function App() {
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[999999] bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl font-medium text-sm animate-fadeIn">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[999999] bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl font-medium text-sm animate-fadeIn pointer-events-auto">
           {toastMessage}
         </div>
       )}
 
       {/* Action Buttons */}
       {highlights.length > 0 && (
-        <div className="fixed bottom-6 right-6 z-[999999] flex flex-col gap-3">
+        <div className="fixed bottom-6 right-6 z-[999999] flex flex-col gap-3 pointer-events-auto">
           <button
             onClick={handleClearAll}
             title="Clear all highlights"

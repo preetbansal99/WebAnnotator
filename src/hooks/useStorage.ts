@@ -9,12 +9,30 @@ export function useStorage(url: string) {
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Normalize URL to omit hashes and common tracking params
+  const getNormalizedUrl = (rawUrl: string) => {
+    try {
+      const parsed = new URL(rawUrl);
+      parsed.hash = '';
+
+      // Remove common tracking params
+      const trackingParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'ref'];
+      trackingParams.forEach(param => parsed.searchParams.delete(param));
+
+      return parsed.toString();
+    } catch {
+      return rawUrl.split('#')[0];
+    }
+  };
+
+  const normalizedUrl = getNormalizedUrl(url);
+
   const loadHighlights = useCallback(async () => {
     try {
       setIsLoading(true);
       const result = await chrome.storage.local.get(['highlights']);
       const allHighlights = result.highlights || {};
-      const urlHighlights = allHighlights[url] || [];
+      const urlHighlights = allHighlights[normalizedUrl] || [];
       setHighlights(urlHighlights);
     } catch (error) {
       console.error('Error loading highlights:', error);
@@ -31,7 +49,7 @@ export function useStorage(url: string) {
     const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
       if (areaName === 'local' && changes.highlights) {
         const newValue = changes.highlights.newValue || {};
-        const urlHighlights = newValue[url] || [];
+        const urlHighlights = newValue[normalizedUrl] || [];
         setHighlights(urlHighlights);
       }
     };
@@ -47,10 +65,10 @@ export function useStorage(url: string) {
     try {
       const result = await chrome.storage.local.get(['highlights']);
       const allHighlights = result.highlights || {};
-      const urlHighlights = allHighlights[url] || [];
+      const urlHighlights = allHighlights[normalizedUrl] || [];
 
       const updatedHighlights = [...urlHighlights, highlight];
-      allHighlights[url] = updatedHighlights;
+      allHighlights[normalizedUrl] = updatedHighlights;
 
       await chrome.storage.local.set({ highlights: allHighlights });
       setHighlights(updatedHighlights);
@@ -67,13 +85,13 @@ export function useStorage(url: string) {
     try {
       const result = await chrome.storage.local.get(['highlights']);
       const allHighlights = result.highlights || {};
-      const urlHighlights = allHighlights[url] || [];
+      const urlHighlights = allHighlights[normalizedUrl] || [];
 
       const updatedHighlights = urlHighlights.map((h: Highlight) =>
         h.id === id ? { ...h, ...updates, updatedAt: Date.now() } : h
       );
 
-      allHighlights[url] = updatedHighlights;
+      allHighlights[normalizedUrl] = updatedHighlights;
       await chrome.storage.local.set({ highlights: allHighlights });
       setHighlights(updatedHighlights);
     } catch (error) {
@@ -87,10 +105,10 @@ export function useStorage(url: string) {
     try {
       const result = await chrome.storage.local.get(['highlights']);
       const allHighlights = result.highlights || {};
-      const urlHighlights = allHighlights[url] || [];
+      const urlHighlights = allHighlights[normalizedUrl] || [];
 
       const updatedHighlights = urlHighlights.filter((h: Highlight) => h.id !== id);
-      allHighlights[url] = updatedHighlights;
+      allHighlights[normalizedUrl] = updatedHighlights;
 
       await chrome.storage.local.set({ highlights: allHighlights });
       setHighlights(updatedHighlights);
