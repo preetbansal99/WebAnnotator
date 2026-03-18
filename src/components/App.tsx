@@ -401,7 +401,15 @@ export function App() {
   const handleExportPDFFullPage = useCallback(() => {
     setShowExportMenu(false);
     showToast('Opening print dialog — use "Save as PDF" to download');
-    setTimeout(() => window.print(), 300);
+    
+    // Add class to body to trigger print CSS rules for highlights
+    document.body.classList.add('wa-printing-full');
+    
+    setTimeout(() => {
+      window.print();
+      // Remove it after print dialog closes
+      document.body.classList.remove('wa-printing-full');
+    }, 300);
   }, [showToast]);
 
   // PDF Highlights Only — builds cards and prints just those

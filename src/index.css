@@ -25,3 +25,11 @@
   margin-left: 2px;
   vertical-align: super;
 }
+
+/* Print styles specifically for full-page PDF export */
+@media print {
+  body.wa-printing-full [data-highlight-id] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
