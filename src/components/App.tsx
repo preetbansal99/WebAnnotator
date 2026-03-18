@@ -397,6 +397,67 @@ export function App() {
     showToast('Exported ' + highlights.length + ' highlights as TXT');
   }, [highlights, url, showToast]);
 
+  // PDF Full Page — prints entire page with inline highlights visible
+  const handleExportPDFFullPage = useCallback(() => {
+    setShowExportMenu(false);
+    showToast('Opening print dialog — use "Save as PDF" to download');
+    setTimeout(() => window.print(), 300);
+  }, [showToast]);
+
+  // PDF Highlights Only — builds cards and prints just those
+  const handleExportPDFHighlightsOnly = useCallback(() => {
+    if (highlights.length === 0) {
+      showToast('No highlights to export');
+      return;
+    }
+    setShowExportMenu(false);
+
+    // Build a temporary print window with styled highlight cards
+    const colorBg: Record<string, string> = { 'light-yellow': '#fef9c3', 'light-green': '#dcfce7', 'light-blue': '#dbeafe', 'light-pink': '#fce7f3', 'light-purple': '#f3e8ff' };
+    const colorBorder: Record<string, string> = { 'light-yellow': '#fbbf24', 'light-green': '#22c55e', 'light-blue': '#3b82f6', 'light-pink': '#ec4899', 'light-purple': '#a855f7' };
+    const pageTitle = document.title || 'Page';
+    const dt = new Date().toLocaleString();
+
+    const cards = highlights.map((h, i) => {
+      const bg = colorBg[h.color] || '#fef9c3';
+      const border = colorBorder[h.color] || '#fbbf24';
+      const noteRow = h.note
+        ? '<div style="font-size:.85rem;color:#374151;background:#f3f4f6;border-radius:6px;padding:.5rem .75rem;margin-top:.6rem">&#x1F4AC; ' + escapeHtml(h.note) + '</div>'
+        : '';
+      const colorLabel = h.color.replace('light-', '').toUpperCase();
+      const created = new Date(h.createdAt).toLocaleString();
+      return (
+        '<div style="background:' + bg + ';border-left:5px solid ' + border + ';border-radius:10px;padding:1rem 1.25rem;margin-bottom:.75rem;break-inside:avoid">' +
+        '<div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:' + border + ';margin-bottom:.4rem">' + colorLabel + '</div>' +
+        '<blockquote style="font-size:1rem;font-weight:600;line-height:1.6;color:#111827;font-style:italic">&#8220;' + escapeHtml(h.range.text) + '&#8221;</blockquote>' +
+        noteRow +
+        '<div style="font-size:.7rem;color:#9ca3af;margin-top:.6rem">#' + (i + 1) + ' &middot; ' + created + '</div>' +
+        '</div>'
+      );
+    }).join('\n');
+
+    const htmlParts = [
+      '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+      '<title>Highlights - ' + escapeHtml(pageTitle) + '</title>',
+      '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem;color:#1f2937}h1{font-size:1.3rem;font-weight:700;margin-bottom:.5rem}p{font-size:.85rem;color:#6b7280;margin-top:.3rem}.cards{margin-top:1.5rem}</style>',
+      '</head><body>',
+      '<h1>&#x1F4CC; ' + escapeHtml(pageTitle) + '</h1>',
+      '<p>Exported: ' + dt + ' &middot; ' + highlights.length + ' highlight' + (highlights.length !== 1 ? 's' : '') + '</p>',
+      '<p>Source: ' + escapeHtml(url) + '</p>',
+      '<div class="cards">' + cards + '</div>',
+      '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();}}<\/script>',
+      '</body></html>',
+    ];
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(htmlParts.join('\n'));
+      printWindow.document.close();
+    } else {
+      showToast('Popup blocked — please allow popups for this site');
+    }
+  }, [highlights, url, showToast]);
+
   useEffect(() => {
     if (!showExportMenu) return;
     const close = () => setShowExportMenu(false);
@@ -499,7 +560,7 @@ export function App() {
                 >
                   <div style={{ fontWeight: 600 }}>&#x1F5C3; Styled HTML Report</div>
                   <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
-                    Opens in browser · includes colors &amp; notes
+                    Opens in browser &middot; includes colors &amp; notes
                   </div>
                 </button>
 
@@ -511,13 +572,51 @@ export function App() {
                     padding: '12px 16px', background: 'none',
                     border: 'none', cursor: 'pointer',
                     fontSize: '13px', color: '#111827',
+                    borderBottom: '1px solid #f3f4f6',
                   }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 >
                   <div style={{ fontWeight: 600 }}>&#x1F4DD; Plain Text (.txt)</div>
                   <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
-                    Simple list · highlighted text &amp; notes only
+                    Simple list &middot; highlighted text &amp; notes only
+                  </div>
+                </button>
+
+                {/* Option 3 — PDF Full Page */}
+                <button
+                  onClick={handleExportPDFFullPage}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '12px 16px', background: 'none',
+                    border: 'none', cursor: 'pointer',
+                    fontSize: '13px', color: '#111827',
+                    borderBottom: '1px solid #f3f4f6',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                >
+                  <div style={{ fontWeight: 600 }}>&#x1F5A8; PDF &mdash; Full Page</div>
+                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+                    Print entire page with highlights visible
+                  </div>
+                </button>
+
+                {/* Option 4 — PDF Highlights Only */}
+                <button
+                  onClick={handleExportPDFHighlightsOnly}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '12px 16px', background: 'none',
+                    border: 'none', cursor: 'pointer',
+                    fontSize: '13px', color: '#111827',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                >
+                  <div style={{ fontWeight: 600 }}>&#x1F4CB; PDF &mdash; Highlights Only</div>
+                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+                    Coloured cards with notes &middot; Save as PDF
                   </div>
                 </button>
               </div>
