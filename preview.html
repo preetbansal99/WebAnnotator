@@ -195,6 +195,24 @@
     }
     mark[data-wa][data-note]:hover::after { display: none; }
   }
+  /* Print mode: highlights-only cards */
+  @media print {
+    body.print-cards-only main header,
+    body.print-cards-only article { display: none !important; }
+    body.print-cards-only #print-area { display: block !important; }
+    .print-card {
+      break-inside: avoid; page-break-inside: avoid;
+      border-left: 5px solid #ccc; padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem; border-radius: 8px; background: #fafafa;
+    }
+    .print-card-yellow { border-left-color: #fbbf24; background: #fefce8; }
+    .print-card-green  { border-left-color: #22c55e; background: #f0fdf4; }
+    .print-card-blue   { border-left-color: #3b82f6; background: #eff6ff; }
+    .print-card blockquote { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.3rem; }
+    .print-card .print-note { font-size: 0.82rem; color: #4b5563; margin-top: 0.25rem; }
+    .print-card .print-meta { font-size: 0.7rem; color: #9ca3af; margin-top: 0.3rem; }
+  }
+  #print-area { display: none; }
 </style>
 </head>
 <body>
@@ -216,7 +234,7 @@
     <p>Browser extensions transformed browsers from simple document viewers into programmable platforms. Chrome's extension API, introduced in 2009, allowed developers to inject scripts, modify page content, and create entirely new user interfaces within the browser. Extensions like ad blockers, password managers, and annotation tools — such as this very WebAnnotator — became essential parts of how millions of people experience the web every day.</p>
     <p>The Manifest V3 specification, rolled out by Chrome starting in 2020, introduced significant changes to the extension platform. Service workers replaced persistent background pages, improving memory efficiency but requiring developers to rethink how their extensions manage state. Content scripts continued to provide the ability to interact with page DOM, which is exactly how tools like WebAnnotator inject highlights and floating toolbars into any webpage you visit.</p>
   </article>
-
+  <div id="print-area"></div>
 </main>
 
 <!-- ═══════════ SIDEBAR ═══════════ -->
@@ -232,7 +250,8 @@
   </div>
   <div class="sidebar-actions">
     <button class="sidebar-btn btn-html" onclick="exportHTML()">🌐 Export as HTML</button>
-    <button class="sidebar-btn btn-pdf" onclick="exportPDF()">🖨️ Export as PDF</button>
+    <button class="sidebar-btn btn-pdf" onclick="exportPDF()">🖨️ PDF — Full Page</button>
+    <button class="sidebar-btn" style="background:#a855f7;color:#fff" onclick="exportPDFHighlightsOnly()">📋 PDF — Highlights Only</button>
     <button class="sidebar-btn btn-clear" onclick="clearAll()">🗑️ Clear All</button>
   </div>
 </aside>
@@ -458,10 +477,33 @@
     toast('Exported ' + highlights.length + ' highlights as HTML');
   };
 
-  // ── EXPORT PDF ──
+  // ── EXPORT PDF (Full Page) ──
   window.exportPDF = function() {
+    document.body.classList.remove('print-cards-only');
     toast('Opening print dialog — use "Save as PDF" to download');
     setTimeout(function() { window.print(); }, 300);
+  };
+
+  // ── EXPORT PDF (Highlights Only) ──
+  window.exportPDFHighlightsOnly = function() {
+    if (highlights.length === 0) return toast('No highlights to export');
+    var colorClass = { yellow: 'print-card-yellow', green: 'print-card-green', blue: 'print-card-blue' };
+    var printArea = document.getElementById('print-area');
+    printArea.innerHTML = '<h2 style="margin-bottom:1rem;font-size:1.1rem">Highlighted Excerpts</h2>' +
+      highlights.map(function(h, i) {
+        var noteRow = h.note ? '<div class="print-note">💬 ' + escHtml(h.note) + '</div>' : '';
+        return '<div class="print-card ' + (colorClass[h.color] || 'print-card-yellow') + '">' +
+          '<blockquote>&#8220;' + escHtml(h.text) + '&#8221;</blockquote>' +
+          noteRow +
+          '<div class="print-meta">#' + (i + 1) + ' · ' + h.color.toUpperCase() + '</div>' +
+        '</div>';
+      }).join('\n');
+    document.body.classList.add('print-cards-only');
+    toast('Opening print dialog — highlights only');
+    setTimeout(function() {
+      window.print();
+      document.body.classList.remove('print-cards-only');
+    }, 300);
   };
 
   // ── CLEAR ALL ──
