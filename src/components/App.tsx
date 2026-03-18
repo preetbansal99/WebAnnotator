@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { HighlightOverlay } from './HighlightOverlay';
 import { NoteModal } from './NoteModal';
 import { useStorage } from '../hooks/useStorage';
@@ -25,12 +25,20 @@ import {
  */
 export function App() {
   const url = window.location.href;
-  const { highlights, saveHighlight, isLoading } = useStorage(url);
+  const { highlights, saveHighlight, deleteHighlight, isLoading } = useStorage(url);
 
   const [toolbarPosition, setToolbarPosition] = useState<ToolbarPosition | null>(null);
   const [selectedRange, setSelectedRange] = useState<Range | null>(null);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [pendingHighlight, setPendingHighlight] = useState<Highlight | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 3000);
+  }, []);
+
+  const savedRangeRef = useRef<Range | null>(null);
 
   // Restore highlights when they're loaded
   useEffect(() => {
@@ -49,7 +57,7 @@ export function App() {
         e.stopPropagation();
         const noteText = target.getAttribute('title');
         if (noteText) {
-          alert(`Note:\n\n${noteText}`);
+          showToast(`Note: ${noteText}`);
         }
       }
     };
@@ -171,13 +179,15 @@ export function App() {
       setSelectedRange(null);
     } catch (error) {
       console.error('Error creating highlight:', error);
-      alert('Failed to create highlight. Check console for details.');
+      showToast('Failed to create highlight.');
     }
-  }, [selectedRange, url, saveHighlight]);
+  }, [selectedRange, url, saveHighlight, showToast]);
 
   // Handle "Add Note" button
   const handleAddNote = useCallback(() => {
     if (!selectedRange) return;
+
+    savedRangeRef.current = selectedRange.cloneRange();
 
     const highlight: Highlight = {
       id: generateId(),
@@ -195,9 +205,9 @@ export function App() {
 
   // Handle note save
   const handleNoteSave = useCallback(async (note: string) => {
-    if (!pendingHighlight || !selectedRange) return;
+    const rangeCopy = savedRangeRef.current?.cloneRange();
+    if (!pendingHighlight || !rangeCopy) return;
 
-    const rangeCopy = selectedRange.cloneRange();
     const highlightWithNote: Highlight = {
       ...pendingHighlight,
       note,
@@ -210,11 +220,12 @@ export function App() {
       setShowNoteModal(false);
       setPendingHighlight(null);
       setSelectedRange(null);
+      savedRangeRef.current = null;
     } catch (error) {
       console.error('Error creating highlight with note:', error);
-      alert('Failed to save note. Check console for details.');
+      showToast('Failed to save note.');
     }
-  }, [pendingHighlight, selectedRange, saveHighlight]);
+  }, [pendingHighlight, saveHighlight, showToast]);
 
   const handleNoteCancel = useCallback(() => {
     setShowNoteModal(false);
@@ -230,7 +241,7 @@ export function App() {
   // Export Highlights function
   const handleExport = useCallback(() => {
     if (highlights.length === 0) {
-      alert("No highlights to export for this page.");
+      showToast("No highlights to export");
       return;
     }
 
@@ -256,7 +267,18 @@ export function App() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(downloadUrl);
-  }, [highlights, url]);
+
+    showToast(`Exported ${highlights.length} highlights.`);
+  }, [highlights, url, showToast]);
+
+  const handleClearAll = useCallback(async () => {
+    if (confirm('Delete all highlights on this page?')) {
+      for (const h of highlights) {
+        await deleteHighlight(h.id);
+      }
+      showToast('All highlights cleared.');
+    }
+  }, [highlights, deleteHighlight, showToast]);
 
   return (
     <>
@@ -276,38 +298,36 @@ export function App() {
         />
       )}
 
-      {/* Export Floating Action Button */}
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[999999] bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl font-medium text-sm animate-fadeIn">
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Action Buttons */}
       {highlights.length > 0 && (
-        <button
-          onClick={handleExport}
-          title="Export current page's highlights to a text file"
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            zIndex: 999999,
-            padding: '12px 20px',
-            backgroundColor: '#ffffff',
-            color: '#333333',
-            border: '1px solid #e0e0e0',
-            borderRadius: '24px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontFamily: 'system-ui, -apple-system, sans-serif'
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Export ({highlights.length})
-        </button>
+        <div className="fixed bottom-6 right-6 z-[999999] flex flex-col gap-3">
+          <button
+            onClick={handleClearAll}
+            title="Clear all highlights"
+            className="px-5 py-3 bg-white text-red-600 border border-gray-200 rounded-full shadow-lg hover:bg-gray-50 transition-colors duration-150 text-sm font-semibold flex items-center justify-center shadow-md"
+          >
+            Clear All
+          </button>
+          <button
+            onClick={handleExport}
+            title="Export current page's highlights to a text file"
+            className="px-5 py-3 bg-white text-gray-800 border border-gray-200 rounded-full shadow-lg hover:bg-gray-50 transition-colors duration-150 text-sm font-semibold flex items-center gap-2 shadow-md"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export ({highlights.length})
+          </button>
+        </div>
       )}
     </>
   );

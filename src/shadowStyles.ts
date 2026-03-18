@@ -392,4 +392,37 @@ export const shadowStyles = `
   .-bottom-2 {
     bottom: -0.5rem;
   }
+  
+  .text-red-600 {
+    color: #dc2626;
+  }
+
+  .outline-none {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+
+  .z-10 {
+    z-index: 10;
+  }
+
+  .z-20 {
+    z-index: 20;
+  }
+
+  .z-\[999999\] {
+    z-index: 999999;
+  }
+
+  .z-\[1000000\] {
+    z-index: 1000000;
+  }
+
+  .border-\[3px\] {
+    border-width: 3px;
+  }
+  
+  .hover\\:bg-gray-50:hover {
+    background-color: #f9fafb;
+  }
 `;

@@ -37,22 +37,23 @@ export function NoteModal({ initialNote = '', onSave, onCancel }: NoteModalProps
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 animate-fadeIn">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 animate-slideUp">
+    <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black bg-opacity-50 animate-fadeIn" style={{ height: '100vh', width: '100vw', margin: 0, padding: 0 }}>
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 animate-slideUp relative z-[1000000]">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">
           {initialNote ? 'Edit Note' : 'Add Note'}
         </h2>
-        
+
         <form onSubmit={handleSubmit}>
           <textarea
             ref={textareaRef}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
             placeholder="Enter your note here..."
+            autoFocus
           />
-          
+
           <div className="flex justify-end gap-2 mt-4">
             <button
               type="button"
@@ -70,7 +71,7 @@ export function NoteModal({ initialNote = '', onSave, onCancel }: NoteModalProps
             </button>
           </div>
         </form>
-        
+
         <p className="text-xs text-gray-500 mt-3">
           Tip: Press Cmd/Ctrl + Enter to save quickly
         </p>
