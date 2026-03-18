@@ -3,18 +3,18 @@
 @tailwind utilities;
 
 /* Highlight styles for annotated text */
-.highlight-yellow {
-  background-color: #fef08a;
+.highlight-light-yellow {
+  background-color: #fef08a !important;
   cursor: pointer;
 }
 
-.highlight-green {
-  background-color: #86efac;
+.highlight-light-green {
+  background-color: #86efac !important;
   cursor: pointer;
 }
 
-.highlight-blue {
-  background-color: #93c5fd;
+.highlight-light-blue {
+  background-color: #93c5fd !important;
   cursor: pointer;
 }
 

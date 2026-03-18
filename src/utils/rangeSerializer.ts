@@ -102,7 +102,6 @@ export function serializeRange(range: Range, root: Node = document.body): Serial
 
   // Fallback for when start/end container is an Element (e.g. triple click selects the paragraph)
   if (!foundStart || !foundEnd) {
-    console.warn("range.startContainer or endContainer was not a Text node.");
     // To handle edge cases robustly, return a dummy or attempt to resolve Element offsets. 
     // Usually getSelection() mostly gives Text nodes. We ignore Element node edge cases for simplicity.
   }
@@ -157,21 +156,11 @@ export function deserializeRange(
     }
 
     if (!foundStart || !foundEnd) {
-      console.warn('Could not restore range: text nodes length has changed drastically.');
       return null;
-    }
-
-    // Verify the text matches at least partially
-    const textSnippet = range.toString().trim();
-    const serializedSnippet = serialized.text.trim();
-    if (textSnippet !== serializedSnippet && !serializedSnippet.includes(textSnippet) && !textSnippet.includes(serializedSnippet)) {
-      console.warn('Range text mismatch - page content has significantly changed. Expected: ' + serialized.text.substring(0, 20) + '... Got: ' + range.toString().substring(0, 20));
-      // Return anyway, as some dynamic content changes white space
     }
 
     return range;
   } catch (error) {
-    console.error('Error deserializing range:', error);
     return null;
   }
 }

@@ -10,18 +10,18 @@ export const shadowStyles = `
   }
 
   /* Highlight colors */
-  .highlight-yellow {
-    background-color: #fef08a;
+  .highlight-light-yellow, .bg-highlight-light-yellow {
+    background-color: #fef08a !important;
     cursor: pointer;
   }
 
-  .highlight-green {
-    background-color: #86efac;
+  .highlight-light-green, .bg-highlight-light-green {
+    background-color: #86efac !important;
     cursor: pointer;
   }
 
-  .highlight-blue {
-    background-color: #93c5fd;
+  .highlight-light-blue, .bg-highlight-light-blue {
+    background-color: #93c5fd !important;
     cursor: pointer;
   }
 
@@ -99,12 +99,24 @@ export const shadowStyles = `
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   }
 
+  .shadow-2xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
+  .shadow-md {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
   .border {
     border-width: 1px;
   }
 
   .border-2 {
     border-width: 2px;
+  }
+
+  .border-4 {
+    border-width: 4px;
   }
 
   .border-gray-200 {
@@ -119,6 +131,10 @@ export const shadowStyles = `
     padding: 0.5rem;
   }
 
+  .p-4 {
+    padding: 1rem;
+  }
+
   .p-6 {
     padding: 1.5rem;
   }
@@ -126,6 +142,11 @@ export const shadowStyles = `
   .px-3 {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
+  }
+
+  .px-5 {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
   }
 
   .py-1\.5 {
@@ -136,6 +157,11 @@ export const shadowStyles = `
   .py-2 {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
+  }
+
+  .py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
   }
 
   .px-4 {
@@ -162,6 +188,10 @@ export const shadowStyles = `
   .gap-2 {
     gap: 0.5rem;
   }
+  
+  .gap-4 {
+    gap: 1rem;
+  }
 
   .inset-0 {
     top: 0;
@@ -174,8 +204,16 @@ export const shadowStyles = `
     width: 2rem;
   }
 
+  .w-12 {
+    width: 3rem;
+  }
+
   .h-8 {
     height: 2rem;
+  }
+
+  .h-12 {
+    height: 3rem;
   }
 
   .w-full {
@@ -204,9 +242,22 @@ export const shadowStyles = `
     font-size: 1.25rem;
     line-height: 1.75rem;
   }
+  
+  .text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
 
   .font-medium {
     font-weight: 500;
+  }
+
+  .font-semibold {
+    font-weight: 600;
+  }
+
+  .font-bold {
+    font-weight: 700;
   }
 
   .font-semibold {
@@ -320,6 +371,10 @@ export const shadowStyles = `
 
   .h-6 {
     height: 1.5rem;
+  }
+  
+  .h-10 {
+    height: 2.5rem;
   }
 
   .absolute {

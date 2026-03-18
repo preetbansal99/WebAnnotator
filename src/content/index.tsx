@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from '../components/App';
 import { shadowStyles } from '../shadowStyles';
+import '../index.css';
 
 /**
  * Content Script Entry Point

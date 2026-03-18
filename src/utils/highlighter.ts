@@ -148,11 +148,9 @@ export function restoreHighlights(highlights: Highlight[], clearFirst: boolean =
         applyHighlight(range, highlight);
         successCount++;
       } else {
-        console.warn('Could not restore range for highlight:', highlight.id);
         failCount++;
       }
     } catch (error) {
-      console.warn('Failed to restore highlight:', highlight.id, error);
       failCount++;
     }
   });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { HighlightOverlay } from './HighlightOverlay-simple';
-import { NoteModal } from './NoteModal-simple';
+import { HighlightOverlay } from './HighlightOverlay';
+import { NoteModal } from './NoteModal';
 import { useStorage } from '../hooks/useStorage';
 import type { HighlightColor, ToolbarPosition, Highlight } from '../types';
 import {
