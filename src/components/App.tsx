@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { HighlightOverlay } from './HighlightOverlay';
 import { NoteModal } from './NoteModal';
 import { useStorage } from '../hooks/useStorage';

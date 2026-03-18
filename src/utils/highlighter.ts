@@ -1,4 +1,4 @@
-import type { Highlight, HighlightColor } from '../types';
+import type { Highlight } from '../types';
 import { deserializeRange, getTextNodes } from './rangeSerializer';
 
 const HIGHLIGHT_DATA_ATTRIBUTE = 'data-highlight-id';
